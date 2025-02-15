@@ -1,0 +1,165 @@
+--Coded in SQLite
+
+-- a. List of patients and the medications they currently take, sorted by patient's last name and medication name
+SELECT 
+    P.Name AS PatientName,
+    M.Name AS MedicationName,
+    M.Dosage,
+    M.Date_Updated AS DatePrescribed
+FROM 
+    People P
+JOIN 
+    Records R ON P.ID_No = R.PatientID
+JOIN 
+    Medication M ON R.RecordID = M.RecordID
+ORDER BY 
+    P.Name ASC, M.Name ASC;
+    
+-- b. Display patient information for patients who have Delta Dental insurance policy
+SELECT 
+    P.ID_No,
+    P.Name AS PatientName,
+    P.Phone,
+    P.DOB,
+    P.Demographics
+FROM 
+    People P
+JOIN 
+    InsuranceCoverage IC ON P.ID_No = IC.PatientID
+JOIN 
+    Accepted_Insurance_Policies AIP ON IC.Plan_No = AIP.Plan_No
+WHERE 
+    AIP.Company = 'DeltaDental'; 
+
+-- c. List of procedures and dates of service performed by Dr. Smilow
+SELECT 
+    ASer.ServiceName, A.Date
+FROM 
+    People P 
+    Join ProviderAppointments PA on P.ID_No = PA.ProviderID 
+    JOIN Appointments A on PA.Appt_ID = A.Appt_ID 
+    join AppointmentServices ASer on ASer.Appt_ID = PA.Appt_ID 
+WHERE 
+    P.Name = 'Dr. Sarah Smilow'
+ORDER BY 
+    A.Date; 
+    
+-- d. List of past due invoices with patient contact information (balance over $10 and past 30 days)
+SELECT 
+    I.Invoice_No,
+    P.Name AS PatientName,
+    P.Phone,
+    P.DOB,
+    I.Amount AS AmountDue,
+    I.Date_Issued,
+    (I.Amount - IFNULL(SUM(Pmt.Amount), 0)) AS BalanceDue
+FROM 
+    Invoice I
+JOIN 
+    Appointments A ON I.ApptID = A.Appt_ID
+JOIN 
+    People P ON A.PatientID = P.ID_No
+LEFT JOIN 
+    Payments Pmt ON Pmt.InvoiceNo = I.Invoice_No
+WHERE 
+    I.Date_Issued < DATE('now', '-30 day')  -- Past due more than 30 days
+GROUP BY 
+    I.Invoice_No, P.Name, P.Phone, P.DOB, I.Amount, I.Date_Issued
+HAVING 
+    (I.Amount - IFNULL(SUM(Pmt.Amount), 0)) > 10  -- Balance due is over $10
+ORDER BY 
+    I.Date_Issued DESC; 
+    
+-- e. Patients who brought in the most revenue in the past year
+SELECT 
+    P.ID_No,
+    P.Name AS PatientName,
+    SUM(I.Amount) AS TotalRevenue
+FROM 
+    People P
+JOIN 
+    Appointments A ON A.PatientID = P.ID_No
+join 
+	Invoice I on I.ApptID = A.Appt_ID
+WHERE 
+    A.Date >= DATE('now', '-1 year')
+GROUP BY 
+    P.ID_No
+ORDER BY 
+    TotalRevenue DESC
+LIMIT 10;  -- Display top 10 patients with the highest revenue 
+
+-- f. List of doctors who performed less than 5 procedures this year
+SELECT 
+    P.Name AS DoctorName,
+    COUNT(ASer.ServiceName) AS ProceduresPerformed
+FROM 
+    People P
+JOIN 
+    ProviderAppointments PA ON PA.ProviderID = P.ID_No 
+JOIN 
+	Appointments A on A.Appt_ID = PA.Appt_ID
+JOIN 
+	AppointmentServices ASer on ASer.Appt_ID = PA.Appt_ID
+WHERE 
+    A.Date >= DATE('now', 'start of year')
+GROUP BY 
+    P.ID_No
+HAVING 
+    COUNT(ASer.ServiceName) < 5; 
+    
+-- g. Highest paying procedures, procedure price, and total number of those procedures performed
+SELECT 
+    Pr.Name AS ProcedureName,
+    Pr.Price,
+    COUNT(PP.ProcedureName) AS TotalPerformed
+FROM 
+    Procedure Pr
+JOIN 
+    ProcedurePerformers PP ON Pr.Name = PP.ProcedureName
+GROUP BY 
+    Pr.Name
+ORDER BY 
+    Pr.Price DESC; 
+    
+-- h. List of all payment types accepted, number of times used, and total amount charged
+SELECT 
+    Pmt.Type AS PaymentType,
+    COUNT(Pmt.Payment_No) AS PaymentCount,
+    SUM(Pmt.Amount) AS TotalAmount
+FROM 
+    Payments Pmt
+GROUP BY 
+    Pmt.Type
+UNION 
+SELECT 
+ 	CC.Type AS PaymentType, 
+ 	COUNT(CC.Payment_No) as PaymentCount, 
+ 	SUM(CC.Amount) AS TotalAmount
+ FROM	
+ 	CardPayment CC
+ group by 
+ 	CC.Type
+UNION 
+SELECT	
+ 	C.Type as PaymentType,
+ 	COUNT(C.Payment_No) as PaymentCount,
+ 	SUM(C.Amount) as TotalAmount
+ from 
+ 	Checks C 
+ Group By 
+ 	C.Type;
+    
+-- i. Name of the most popular insurance plan currently used by patients
+SELECT 
+    AIP.Company AS InsuranceCompany,
+    COUNT(IC.PatientID) AS PatientCount
+FROM 
+    InsuranceCoverage IC
+JOIN 
+    Accepted_Insurance_Policies AIP ON IC.Plan_No = AIP.Plan_No
+GROUP BY 
+    AIP.Company
+ORDER BY 
+    PatientCount DESC
+LIMIT 1;

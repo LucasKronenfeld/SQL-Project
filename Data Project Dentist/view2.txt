@@ -1,0 +1,13 @@
+--Coded in SQLite
+CREATE VIEW Provider_Procedure_Performance1 AS
+SELECT 
+    pp.ProviderID,
+    p.Name AS ProviderName,
+    COUNT(pp.ProcedureName) AS TotalProcedures,
+    SUM(pr.Price) AS TotalRevenue
+FROM ProcedurePerformers pp
+JOIN Procedure pr ON pp.ProcedureName = pr.Name
+JOIN People p ON pp.ProviderID = p.ID_No
+GROUP BY pp.ProviderID, p.Name;
+
+SELECT * FROM Provider_Procedure_Performance;

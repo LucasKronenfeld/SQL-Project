@@ -1,0 +1,41 @@
+--Made in SQLite
+-- Pull all appointments for a specific patient
+SELECT
+	Appointments.Appt_ID,
+	Appointments.Date,
+	Appointments.Time,
+	Procedure.Name AS ProcedureName,
+	Accepted_Insurance_Policies.Company AS InsuranceCompany
+FROM
+	Appointments
+	LEFT JOIN AppointmentServices ON Appointments.Appt_ID = AppointmentServices.Appt_ID
+	LEFT JOIN ServiceProcedures ON AppointmentServices.ServiceName = ServiceProcedures.ServiceName
+	LEFT JOIN Procedure ON ServiceProcedures.ProcedureName = Procedure.Name
+	LEFT JOIN InsuranceCoverage ON Appointments.PatientID = InsuranceCoverage.PatientID
+	LEFT JOIN Accepted_Insurance_Policies ON InsuranceCoverage.Plan_No = Accepted_Insurance_Policies.Plan_No
+WHERE
+	Appointments.PatientID = '1';
+
+-- Selects the name of the procedure and the count of times it was performed
+SELECT
+	Procedure.Name AS ProcedureName,
+	COUNT(Payments.ProcedureName) AS ProcedureCount
+FROM
+	ProcedureCoverage
+	LEFT JOIN Procedure ON ProcedureCoverage.ProcedureName =
+	Procedure.Name
+	LEFT JOIN Payments ON Procedure.Name = Payments.ProcedureName
+	JOIN Accepted_Insurance_Policies ON Accepted_Insurance_Policies.Plan_No = ProcedureCoverage.Plan_No
+WHERE
+	Accepted_Insurance_Policies.Plan_No = '102'
+GROUP BY
+	Procedure.Name;
+    
+-- Selects the feedback from patients grouped by appointment
+Select Feedback.Comments, Feedback.Rating, People.Name
+FROM
+	Feedback, People
+where 
+	Feedback.PatientID = People.ID_No
+group by 
+	Feedback.PatientID, Feedback.ApptID;

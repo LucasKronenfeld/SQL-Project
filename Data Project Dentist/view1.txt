@@ -1,0 +1,15 @@
+--Coded in SQLite
+CREATE VIEW Patient_Appointment_Summary AS
+SELECT 
+    p.ID_No AS PatientID,
+    p.Name AS PatientName,
+    COUNT(DISTINCT a.Appt_ID) AS TotalAppointments,
+    COUNT(DISTINCT aps.ServiceName) AS TotalServices,
+    SUM(i.Amount) AS TotalAmountCharged
+FROM People p
+JOIN Appointments a ON p.ID_No = a.PatientID
+LEFT JOIN AppointmentServices aps ON a.Appt_ID = aps.Appt_ID
+LEFT JOIN Invoice i ON a.Appt_ID = i.ApptID
+GROUP BY p.ID_No, p.Name;
+
+SELECT * FROM Patient_Appointment_Summary;

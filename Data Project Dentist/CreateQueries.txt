@@ -1,0 +1,261 @@
+--Coded in SQLite
+-- Table: HIPAA_Form
+CREATE TABLE HIPAA_Form (
+ ID_No INTEGER PRIMARY KEY,
+ IsSigned BOOLEAN,
+ Form TEXT,
+ Date_Updated DATE,
+ RecordID INTEGER,
+ FOREIGN KEY (RecordID) REFERENCES Records(RecordID)
+);
+-- Table: Medical History
+CREATE TABLE Medical_History (
+ ID_No INTEGER PRIMARY KEY,
+ History TEXT,
+ Last_X_Ray_Date DATE,
+ Date_Updated DATE,
+ RecordID INTEGER,
+ FOREIGN KEY (RecordID) REFERENCES Records(RecordID)
+);
+-- Table: Allergy
+CREATE TABLE Allergy (
+ ID_No INTEGER PRIMARY KEY,
+ Name TEXT,
+ Symptoms TEXT,
+ Date_Updated DATE,
+ RecordID INTEGER,
+ FOREIGN KEY (RecordID) REFERENCES Records(RecordID)
+);
+-- Table: Medication
+CREATE TABLE Medication (
+ ID_No INTEGER PRIMARY KEY,
+ Name TEXT,
+ Dosage TEXT,
+ Date_Updated DATE,
+ RecordID INTEGER,
+ FOREIGN KEY (RecordID) REFERENCES Records(RecordID)
+);
+-- Table: Records
+CREATE TABLE Records (
+ RecordID INTEGER PRIMARY KEY,
+ PatientID INTEGER,
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No)
+);
+-- Table: Feedback
+CREATE TABLE Feedback (
+ FeedbackID INTEGER PRIMARY KEY,
+ Comments TEXT,
+ Rating INTEGER,
+ Date DATE,
+ PatientID INTEGER,
+ ApptID INTEGER,
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No),
+ FOREIGN KEY (ApptID) REFERENCES Appointments(Appt_ID)
+);
+-- Table: People
+CREATE TABLE People (
+ ID_No INTEGER PRIMARY KEY,
+ Name TEXT,
+ Emergency_Contact TEXT,
+ Phone TEXT,
+ DOB DATE,
+ Type TEXT,
+ Demographics TEXT,
+ Employee_Type TEXT,
+ Tenure INTEGER,
+ SSN TEXT UNIQUE,
+ Profession TEXT,
+ PrimaryProviderID INTEGER,
+ FOREIGN KEY (PrimaryProviderID) REFERENCES People(ID_No)
+);
+-- Table: InsuranceCoverage
+CREATE TABLE InsuranceCoverage (
+ PatientID INTEGER,
+ Plan_No INTEGER,
+ Member_ID TEXT,
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No),
+ FOREIGN KEY (Plan_No) REFERENCES Accepted_Insurance_Policies(Plan_No),
+ PRIMARY KEY (PatientID, Plan_No)
+);
+-- Table: Address
+CREATE TABLE Address (
+ ID INTEGER PRIMARY KEY,
+ StreetNo INTEGER,
+ Street TEXT,
+ Town TEXT,
+ State TEXT,
+ Zip INTEGER
+);
+-- Table: PeoplesAddresses
+CREATE TABLE PeoplesAddresses (
+ AddressID INTEGER,
+ PersonID INTEGER,
+ FOREIGN KEY (AddressID) REFERENCES Address(ID),
+ FOREIGN KEY (PersonID) REFERENCES People(ID_No),
+ PRIMARY KEY (AddressID, PersonID)
+);
+-- Table: Card Info
+CREATE TABLE Card_Info (
+ Card_No INTEGER PRIMARY KEY,
+ Exp_Date DATE,
+ Zip INTEGER,
+ CVV INTEGER
+);
+-- Table: BillingInfo
+CREATE TABLE BillingInfo (
+ Card_No INTEGER,
+ PatientID INTEGER,
+ FOREIGN KEY (Card_No) REFERENCES Card_Info(Card_No),
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No),
+ PRIMARY KEY (Card_No, PatientID)
+);
+-- Table: Licenses
+CREATE TABLE Licenses (
+ License_No INTEGER PRIMARY KEY,
+ State TEXT,
+ Expiration_Date DATE,
+ National_Provider_ID INTEGER,
+ MedicalProfessionalID INTEGER,
+ FOREIGN KEY (MedicalProfessionalID) REFERENCES People(ID_No)
+);
+-- Table: Accepted Insurance Policies
+CREATE TABLE Accepted_Insurance_Policies (
+ Plan_No INTEGER PRIMARY KEY,
+ Company TEXT,
+ Coverage_Type TEXT
+);
+-- Table: ProcedureCoverage
+CREATE TABLE ProcedureCoverage (
+ ProcedureName TEXT,
+ Plan_No INTEGER,
+ Insured_Price REAL,
+ FOREIGN KEY (ProcedureName) REFERENCES Procedure(Name),
+ FOREIGN KEY (Plan_No) REFERENCES Accepted_Insurance_Policies(Plan_No),
+ PRIMARY KEY (ProcedureName, Plan_No)
+);
+-- Table: Procedure
+CREATE TABLE Procedure (
+ Name TEXT PRIMARY KEY,
+ Price REAL
+);
+-- Table: ProcedurePerformers
+CREATE TABLE ProcedurePerformers (
+ ProcedureName TEXT,
+ ProviderID INTEGER,
+ FOREIGN KEY (ProcedureName) REFERENCES Procedure(Name),
+ FOREIGN KEY (ProviderID) REFERENCES People(ID_No),
+ PRIMARY KEY (ProcedureName, ProviderID)
+);
+-- Table: ProcedureSupplies
+CREATE TABLE ProcedureSupplies (
+ ProcedureName TEXT,
+ ItemID INTEGER,
+ FOREIGN KEY (ProcedureName) REFERENCES Procedure(Name),
+ FOREIGN KEY (ItemID) REFERENCES Inventory_Item(ItemID),
+ PRIMARY KEY (ProcedureName, ItemID)
+);
+-- Table: Service
+CREATE TABLE Service (
+ Name TEXT PRIMARY KEY
+);
+-- Table: AppointmentServices
+CREATE TABLE AppointmentServices (
+ Appt_ID INTEGER,
+ ServiceName TEXT,
+ FOREIGN KEY (Appt_ID) REFERENCES Appointments(Appt_ID),
+ FOREIGN KEY (ServiceName) REFERENCES Service(Name),
+ PRIMARY KEY (Appt_ID, ServiceName)
+);
+-- Table: ServiceProcedures
+CREATE TABLE ServiceProcedures (
+ ServiceName TEXT,
+ ProcedureName TEXT,
+ FOREIGN KEY (ServiceName) REFERENCES Service(Name),
+ FOREIGN KEY (ProcedureName) REFERENCES Procedure(Name),
+ PRIMARY KEY (ServiceName, ProcedureName)
+);
+-- Table: Inventory Item
+CREATE TABLE Inventory_Item (
+ ItemID INTEGER PRIMARY KEY,
+ ItemName TEXT,
+ Quantity_In_Stock INTEGER,
+ Reorder_Level INTEGER,
+ SupplierID INTEGER,
+ FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID)
+);
+-- Table: Supplier
+CREATE TABLE Supplier (
+ SupplierID INTEGER PRIMARY KEY,
+ Supplier_Name TEXT,
+ Phone TEXT
+);
+-- Table: ProviderAppointments
+CREATE TABLE ProviderAppointments (
+ Appt_ID INTEGER,
+ ProviderID INTEGER,
+ FOREIGN KEY (Appt_ID) REFERENCES Appointments(Appt_ID),
+ FOREIGN KEY (ProviderID) REFERENCES People(ID_No),
+ PRIMARY KEY (Appt_ID, ProviderID)
+);
+-- Table: Invoice
+CREATE TABLE Invoice (
+ Invoice_No INTEGER PRIMARY KEY,
+ Amount REAL,
+ Date_Issued DATE,
+ PolicyID INTEGER,
+ ApptID INTEGER,
+ FOREIGN KEY (PolicyID) REFERENCES Accepted_Insurance_Policies(Plan_No),
+ FOREIGN KEY (ApptID) REFERENCES Appointments(Appt_ID)
+);
+-- Table: Payments
+CREATE TABLE Payments (
+ Payment_No INTEGER PRIMARY KEY,
+ Date DATE,
+ Amount REAL,
+ Type TEXT,
+ PatientID INTEGER,
+ ProcedureName TEXT,
+ InvoiceNo INTEGER,
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No),
+ FOREIGN KEY (ProcedureName) REFERENCES Procedure(Name),
+ FOREIGN KEY (InvoiceNo) REFERENCES Invoice(Invoice_No)
+);
+-- Checks
+CREATE TABLE Checks (
+ Payment_No INTEGER PRIMARY KEY,
+ Date DATE,
+ Amount REAL,
+ Type TEXT,
+ CheckNo INTEGER,
+ AccountNo INTEGER,
+ ABANo INTEGER,
+ PatientID INTEGER,
+ ProcedureName TEXT,
+ InvoiceNo INTEGER,
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No),
+ FOREIGN KEY (ProcedureName) REFERENCES Procedure(Name),
+ FOREIGN KEY (InvoiceNo) REFERENCES Invoice(Invoice_No)
+);
+--Appointments
+CREATE TABLE Appointments (
+ Appt_ID INTEGER PRIMARY KEY,
+ PatientID INTEGER,
+ Date DATE,
+ Time TIME,
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No)
+);
+-- cardpyament
+CREATE TABLE CardPayment (
+ Payment_No INTEGER PRIMARY KEY,
+ Amount REAL,
+ Date DATE,
+ Type TEXT,
+ PatientID INTEGER,
+ ProcedureName TEXT,
+ InvoiceNo INTEGER,
+ Card_No INTEGER,
+ FOREIGN KEY (PatientID) REFERENCES People(ID_No),
+ FOREIGN KEY (ProcedureName) REFERENCES Procedure(Name),
+ FOREIGN KEY (InvoiceNo) REFERENCES Invoice(Invoice_No),
+ FOREIGN KEY (Card_No) REFERENCES Card_Info(Card_No)
+);

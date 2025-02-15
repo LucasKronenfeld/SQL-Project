@@ -1,0 +1,29 @@
+--Coded in SQLite
+ROLLBACK;
+--END TRANSACTION;
+BEGIN TRANSACTION;
+
+-- Step 1: Insert a new patient into the People table
+INSERT INTO People (ID_No, Name, Phone, DOB, Type, SSN)
+VALUES (17, 'Jane Shmo', '515-2619', '1990-06-15', 'Patient', '173-55-4111');
+
+-- Step 2: Add an address for the new patient
+INSERT INTO Address (ID, StreetNo, Street, Town, State, Zip)
+VALUES (197, 123, 'Main St', 'Springfield', 'IL', 62704);
+
+-- Step 3: Link the patient to the address
+INSERT INTO PeoplesAddresses (AddressID, PersonID)
+VALUES (197, 17);
+
+-- Step 4: Assign an insurance plan to the patient
+INSERT INTO InsuranceCoverage (PatientID, Plan_No, Member_ID)
+VALUES (17, 1, 'PL123456');
+
+COMMIT;
+--END TRANSACTION;
+
+--view results 
+SELECT * FROM People WHERE ID_No = 17; 
+SELECT * FROM Address WHERE ID = 197;
+SELECT * FROM PeoplesAddresses WHERE PersonID = 17;
+SELECT * FROM InsuranceCoverage WHERE PatientID = 17;

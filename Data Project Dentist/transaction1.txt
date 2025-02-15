@@ -1,0 +1,22 @@
+--Coded in SQLite
+ROLLBACK;
+BEGIN TRANSACTION;
+
+-- Step 1: Insert a new appointment
+INSERT INTO Appointments (Appt_ID, PatientID, Date, Time)
+VALUES (101, 10, '2024-12-05', '10:00:00');
+
+-- Step 2: Assign a provider to the appointment
+INSERT INTO ProviderAppointments (Appt_ID, ProviderID)
+VALUES (101, 3);
+
+-- Step 3: Create an initial invoice
+INSERT INTO Invoice (Invoice_No, Amount, Date_Issued, ApptID)
+VALUES (201, 0.00, '2024-12-01', 101);
+
+COMMIT;
+--END TRANSACTION;
+--show the results
+SELECT * FROM Appointments WHERE Appt_ID = 101;
+SELECT * FROM ProviderAppointments WHERE Appt_ID = 101;
+SELECT * FROM Invoice WHERE Invoice_No = 201;
